@@ -1,0 +1,96 @@
+#!/bin/sh
+# Dont ultrapass header "|"
+#-------HEADER-------------------------------------------------------|
+#AUTOR:
+# Jefferson Rocha <lrcjefferson@gmail.com>
+#
+#DESCRIPTION:
+# Trash is a utility that runs via cli.
+#
+#USAGE
+# trash
+#
+#CHANGELOG
+# (V1.2) 20/03/2018 - Jefferson Rocha
+#   - Now if you run as root it does not show any more errors!
+#
+# (V1.3) 14/06/2018 - Jefferson Rocha
+#   - Now rm remove files and directories started with '-'
+#
+# (V1.4) 21/12/2018 - Jefferson Rocha
+#   - Changed wrong word 'Sucessfull' by 'Sucessful'
+#   - Removed the 'dot' in files size print.
+#   - Add silence Option
+#   - Add Help Option
+#--------------------------------------------------------------------|
+
+#=================VARS
+dir_trash="${HOME}/.local/share/Trash/files/" # Trash Directory
+archive_temp="/tmp/random.trash" # Temp Archive
+silent="1" # Silence OFF
+
+#=================FUNCTIONS
+
+HELP(){
+    cat <<EOF
+USAGE: trash [OPTION]
+
+Trash is a non-interactive command line utility that cleans the system's trash.
+
+OPTIONS
+-q, --quiet
+        Quiet, ideal for use in cron or halt/boot of your system.
+
+-h, --help
+        Show this Help.
+
+Author Jefferson 'Slackjeff' Rocha
+EMAIL BUGS: < root@slackjeff.com.br >
+WEB:        < https://notabug.org/jeffersonrocha/trash >
+EOF
+
+return 0
+}
+
+size_archives(){
+    cd ${dir_trash} 2>/dev/null && du -hs | sed 's/.$//'> ${archive_temp}
+    if [ -e "/tmp/random.trash" ]; then
+      echo -e "\033[34;1mTotal Size:\033[m
+      $(cat /tmp/random.trash)
+----------------------------------"
+    fi
+# Remove a temp archive
+rm "${archive_temp}" 2>/dev/null
+}
+
+#=================START
+
+# Checking if user has passed parameter
+case $1 in
+   -q|--silent)
+     silent="0" # 0 Silent OFF | 1 Silent ON
+   ;;
+
+   -h|--help)
+     HELP
+     exit 0
+   ;;
+esac
+
+# Silent on? Ok, verbose now.
+if [ "$silent" = "1" ]; then
+   size_archives # call function
+   quiet="v"
+fi
+
+# directory exist?, bye bye.
+if [ -d ${dir_trash} ]; then
+   ( # Open subshell
+    cd ${dir_trash} && rm -rf"$quiet" -- * 2>/dev/null
+    [ "$silent" = "1" ] && echo -e "\033[31;1mSucessful.\033[m"
+   )
+else
+   echo "Directory '${dir_trash}' not found in system!"
+fi
+
+
